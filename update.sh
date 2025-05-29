@@ -74,10 +74,11 @@ update_feeds() {
     fi
 
     # 切换nss-packages源
-    #if grep -q "nss_packages" "$BUILD_DIR/$FEEDS_CONF"; then
-    #    sed -i '/nss_packages/d' "$BUILD_DIR/$FEEDS_CONF"
-    #    echo "src-git nss_packages https://github.com/ZqinKing/nss-packages.git" >>"$BUILD_DIR/$FEEDS_CONF"
-    #fi
+    # if grep -q "nss_packages" "$BUILD_DIR/$FEEDS_CONF"; then
+    #     sed -i '/nss_packages/d' "$BUILD_DIR/$FEEDS_CONF"
+    #     [ -z "$(tail -c 1 "$BUILD_DIR/$FEEDS_CONF")" ] || echo "" >>"$BUILD_DIR/$FEEDS_CONF"
+    #     echo "src-git nss_packages https://github.com/LiBwrt/nss-packages.git" >>"$BUILD_DIR/$FEEDS_CONF"
+    # fi
 
     # 更新 feeds
     ./scripts/feeds clean
@@ -735,6 +736,15 @@ update_geoip() {
     fi
 }
 
+update_lucky() {
+    local version=$(find "$BASE_PATH/patches" -name "lucky*" -printf "%f\n" | head -n 1 | awk -F'_' '{print $2}')
+    local mk_dir="$BUILD_DIR/feeds/small8/lucky/Makefile"
+    if [ -d "${mk_dir%/*}" ] && [ -f "$mk_dir" ]; then
+        sed -i '/Build\/Prepare/ a\	[ -f $(TOPDIR)/../patches/lucky_'${version}'_Linux_$(LUCKY_ARCH)_wanji.tar.gz ] && install -Dm644 $(TOPDIR)/../patches/lucky_'${version}'_Linux_$(LUCKY_ARCH)_wanji.tar.gz $(PKG_BUILD_DIR)/$(PKG_NAME)_$(PKG_VERSION)_Linux_$(LUCKY_ARCH).tar.gz' "$mk_dir"
+        sed -i '/wget/d' "$mk_dir"
+    fi
+}
+
 main() {
     clone_repo
     clean_up
@@ -751,7 +761,7 @@ main() {
     update_default_lan_addr
     remove_something_nss_kmod
     update_affinity_script
-    fix_build_for_openssl
+    # fix_build_for_openssl
     update_ath11k_fw
     # fix_mkpkg_format_invalid
     chanage_cpuusage
@@ -774,12 +784,13 @@ main() {
     update_oaf_deconfig
     add_timecontrol
     add_gecoosac
+    update_lucky
     install_feeds
     support_fw4_adg
     update_script_priority
     fix_easytier
     update_geoip
-    update_package "xray-core"
+    # update_package "xray-core"
     # update_proxy_app_menu_location
     # update_dns_app_menu_location
 }
